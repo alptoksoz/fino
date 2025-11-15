@@ -1,13 +1,23 @@
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Star, Info } from 'lucide-react';
 import type { Stock } from '../data/mockData';
 
 interface StocksTableProps {
   stocks: Stock[];
   title: string;
   onTradeClick: (stock: Stock, type: 'buy' | 'sell') => void;
+  onStockClick?: (stock: Stock) => void;
+  onWatchlistToggle?: (stock: Stock) => void;
+  watchlist?: string[];
 }
 
-export default function StocksTable({ stocks, title, onTradeClick }: StocksTableProps) {
+export default function StocksTable({
+  stocks,
+  title,
+  onTradeClick,
+  onStockClick,
+  onWatchlistToggle,
+  watchlist = [],
+}: StocksTableProps) {
   const formatCurrency = (value: number) => {
     return value.toLocaleString('tr-TR', {
       minimumFractionDigits: 2,
@@ -62,18 +72,41 @@ export default function StocksTable({ stocks, title, onTradeClick }: StocksTable
           <tbody className="divide-y divide-gray-800">
             {stocks.map((stock) => {
               const isPositive = stock.change >= 0;
+              const isInWatchlist = watchlist.includes(stock.symbol);
               return (
                 <tr
                   key={stock.symbol}
-                  className="hover:bg-gray-800/30 transition-colors"
+                  className="hover:bg-gray-800/30 transition-colors group"
                 >
                   <td className="px-6 py-4">
-                    <div>
-                      <div className="text-sm font-semibold text-white">
-                        {stock.symbol}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {stock.name}
+                    <div className="flex items-center gap-2">
+                      {onWatchlistToggle && (
+                        <button
+                          onClick={() => onWatchlistToggle(stock)}
+                          className={`p-1 rounded transition-colors ${
+                            isInWatchlist
+                              ? 'text-yellow-500'
+                              : 'text-gray-600 hover:text-yellow-500'
+                          }`}
+                        >
+                          <Star
+                            className={`w-4 h-4 ${isInWatchlist ? 'fill-yellow-500' : ''}`}
+                          />
+                        </button>
+                      )}
+                      <div
+                        onClick={() => onStockClick?.(stock)}
+                        className={onStockClick ? 'cursor-pointer hover:text-blue-400' : ''}
+                      >
+                        <div className="text-sm font-semibold text-white flex items-center gap-1">
+                          {stock.symbol}
+                          {onStockClick && (
+                            <Info className="w-3 h-3 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {stock.name}
+                        </div>
                       </div>
                     </div>
                   </td>
