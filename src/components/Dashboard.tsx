@@ -1,11 +1,44 @@
+import { useState } from 'react';
 import Header from './Header';
 import SummaryCards from './SummaryCards';
 import PortfolioChart from './PortfolioChart';
 import PortfolioTable from './PortfolioTable';
 import StocksTable from './StocksTable';
+import TradeModal from './TradeModal';
+import Toast from './Toast';
 import { portfolioSummary, portfolioChartData, portfolioData, bist100Stocks } from '../data/mockData';
+import type { Stock } from '../data/mockData';
 
 export default function Dashboard() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
+  const [initialTradeType, setInitialTradeType] = useState<'buy' | 'sell'>('buy');
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+
+  const handleTradeClick = (stock: Stock, type: 'buy' | 'sell') => {
+    setSelectedStock(stock);
+    setInitialTradeType(type);
+    setIsModalOpen(true);
+  };
+
+  const handleTrade = (
+    type: 'buy' | 'sell',
+    orderType: 'market' | 'limit',
+    quantity: number,
+    price?: number
+  ) => {
+    const action = type === 'buy' ? 'Alış' : 'Satış';
+    const orderTypeText = orderType === 'market' ? 'Piyasa' : 'Limitli';
+    const priceText = price ? ` ₺${price.toFixed(2)} fiyatından` : '';
+
+    setToastMessage(
+      `${action} emri başarıyla oluşturuldu! ${quantity} adet ${selectedStock?.symbol}${priceText} (${orderTypeText})`
+    );
+    setShowToast(true);
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-950">
       <Header />
@@ -67,9 +100,29 @@ export default function Dashboard() {
 
         {/* BIST100 Stocks */}
         <div className="mt-8">
-          <StocksTable stocks={bist100Stocks} title="BIST 100 Hisseleri" />
+          <StocksTable
+            stocks={bist100Stocks}
+            title="BIST 100 Hisseleri"
+            onTradeClick={handleTradeClick}
+          />
         </div>
       </main>
+
+      {/* Trade Modal */}
+      <TradeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        stock={selectedStock}
+        initialTradeType={initialTradeType}
+        onTrade={handleTrade}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </div>
   );
 }

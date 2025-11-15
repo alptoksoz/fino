@@ -4,9 +4,10 @@ import type { Stock } from '../data/mockData';
 interface StocksTableProps {
   stocks: Stock[];
   title: string;
+  onTradeClick: (stock: Stock, type: 'buy' | 'sell') => void;
 }
 
-export default function StocksTable({ stocks, title }: StocksTableProps) {
+export default function StocksTable({ stocks, title, onTradeClick }: StocksTableProps) {
   const formatCurrency = (value: number) => {
     return value.toLocaleString('tr-TR', {
       minimumFractionDigits: 2,
@@ -123,10 +124,16 @@ export default function StocksTable({ stocks, title }: StocksTableProps) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
-                      <button className="px-3 py-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 text-xs font-medium rounded transition-colors">
+                      <button
+                        onClick={() => onTradeClick(stock, 'buy')}
+                        className="px-3 py-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 text-xs font-medium rounded transition-colors"
+                      >
                         Al
                       </button>
-                      <button className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-medium rounded transition-colors">
+                      <button
+                        onClick={() => onTradeClick(stock, 'sell')}
+                        className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-medium rounded transition-colors"
+                      >
                         Sat
                       </button>
                     </div>
