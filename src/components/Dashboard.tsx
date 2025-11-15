@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import Header from './Header';
+import BottomNav from './BottomNav';
+import MobileDrawer from './MobileDrawer';
 import SummaryCards from './SummaryCards';
 import PortfolioChart from './PortfolioChart';
 import PortfolioDistribution from './PortfolioDistribution';
 import PortfolioTable from './PortfolioTable';
 import StocksTable from './StocksTable';
+import MobileStockCard from './MobileStockCard';
 import Watchlist from './Watchlist';
 import TradeModal from './TradeModal';
 import StockDetailModal from './StockDetailModal';
@@ -16,6 +19,10 @@ import type { Stock } from '../data/mockData';
 export default function Dashboard() {
   // Live prices
   const liveStocks = useLivePrices(bist100Stocks, true);
+
+  // Mobile navigation
+  const [activeTab, setActiveTab] = useState('home');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Trade modal state
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
@@ -84,11 +91,85 @@ export default function Dashboard() {
 
   const watchlistStocks = liveStocks.filter((stock) => watchlist.includes(stock.symbol));
 
-  return (
-    <div className="min-h-screen bg-gray-950">
-      <Header />
+  // Render content based on active tab (mobile)
+  const renderMobileContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return (
+          <>
+            <SummaryCards
+              totalValue={portfolioSummary.totalValue}
+              totalProfitLoss={portfolioSummary.totalProfitLoss}
+              totalProfitLossPercent={portfolioSummary.totalProfitLossPercent}
+              dailyChange={portfolioSummary.dailyChange}
+              dailyChangePercent={portfolioSummary.dailyChangePercent}
+              cash={portfolioSummary.cash}
+              totalAssets={portfolioSummary.totalAssets}
+            />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mt-6">
+              <PortfolioChart data={portfolioChartData} />
+            </div>
+
+            <div className="mt-6">
+              <PortfolioDistribution portfolio={portfolioData} />
+            </div>
+          </>
+        );
+
+      case 'markets':
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-white">BIST 100 Hisseleri</h2>
+            {liveStocks.map((stock) => (
+              <MobileStockCard
+                key={stock.symbol}
+                stock={stock}
+                onTrade={handleTradeClick}
+                onStockClick={handleStockClick}
+                onWatchlistToggle={handleWatchlistToggle}
+                isInWatchlist={watchlist.includes(stock.symbol)}
+              />
+            ))}
+          </div>
+        );
+
+      case 'watchlist':
+        return (
+          <div>
+            <Watchlist
+              stocks={watchlistStocks}
+              onRemove={handleRemoveFromWatchlist}
+              onStockClick={handleStockClick}
+            />
+          </div>
+        );
+
+      case 'profile':
+        return (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4">Profilim</h2>
+            <p className="text-gray-400">Profil ayarları yakında eklenecek...</p>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950 pb-20 lg:pb-0">
+      <Header onMenuClick={() => setIsDrawerOpen(true)} />
+      <MobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+
+      {/* Mobile View */}
+      <main className="lg:hidden px-4 py-6">
+        {renderMobileContent()}
+      </main>
+
+      {/* Desktop View */}
+      <main className="hidden lg:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Cards */}
         <SummaryCards
           totalValue={portfolioSummary.totalValue}
@@ -179,6 +260,9 @@ export default function Dashboard() {
           />
         </div>
       </main>
+
+      {/* Bottom Navigation (Mobile Only) */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Trade Modal */}
       <TradeModal
